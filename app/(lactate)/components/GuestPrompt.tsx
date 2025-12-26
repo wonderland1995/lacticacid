@@ -18,7 +18,7 @@ export function GuestPrompt({ nextLabel, redirectTo }: { nextLabel: string; redi
         />
         <button
           type="submit"
-          className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+          className="w-full rounded-xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-200"
         >
           Continue to {nextLabel}
         </button>

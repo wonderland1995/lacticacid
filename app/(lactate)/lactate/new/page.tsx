@@ -53,7 +53,7 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
           <form action={createAndRedirect} className="mt-4">
             <button
               type="submit"
-              className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+              className="rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-200"
             >
               Create test and start
             </button>
