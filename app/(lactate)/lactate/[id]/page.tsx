@@ -13,19 +13,13 @@ const serviceRoleMissing = authDisabled && !process.env.SUPABASE_SERVICE_ROLE_KE
 export const dynamic = "force-dynamic";
 
 export default async function SessionPage({ params }: { params: { id: string } }) {
-  if (!params.id || params.id === "undefined") {
-    return (
-      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
-        Invalid session id.
-      </div>
-    );
-  }
+  const testId = params.id;
 
   if (serviceRoleMissing) {
     return (
       <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
-        Guest mode is enabled but SUPABASE_SERVICE_ROLE_KEY is not set. Add it to the server env (Supabase → Settings → API
-        → service_role) and redeploy.
+        Guest mode is enabled but SUPABASE_SERVICE_ROLE_KEY is not set. Add it to the server env (Supabase Settings → API →
+        service_role) and redeploy.
       </div>
     );
   }
@@ -36,31 +30,47 @@ export default async function SessionPage({ params }: { params: { id: string } }
   const userId = authDisabled ? guestId : (await supabase.auth.getUser()).data.user?.id;
 
   if (!userId) {
-    return <GuestPrompt nextLabel="session" redirectTo={`/lactate/${params.id}`} />;
+    return <GuestPrompt nextLabel="session" redirectTo={`/lactate/${testId ?? ""}`} />;
+  }
+
+  if (!testId) {
+    return (
+      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
+        Missing session id.
+      </div>
+    );
   }
 
   const { data: test, error } = authDisabled
-    ? await supabase.from("lactate_tests").select("*").eq("id", params.id).single()
+    ? await supabase.from("lactate_tests").select("*").eq("id", testId).single()
     : await supabase
         .from("lactate_tests")
         .select("*")
-        .eq("id", params.id)
+        .eq("id", testId)
         .eq("user_id", userId)
         .single();
 
   if (error || !test) {
     return (
       <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
-        Failed to load session. {error?.message ?? "Not found."}
+        Failed to load session {testId}. {error?.message ?? "Not found."}
       </div>
     );
   }
 
-  const { data: points } = await supabase
+  const { data: points, error: pointsError } = await supabase
     .from("lactate_points")
     .select("*")
-    .eq("test_id", params.id)
+    .eq("test_id", testId)
     .order("stage_index", { ascending: true });
+
+  if (pointsError) {
+    return (
+      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
+        Failed to load points. {pointsError.message}
+      </div>
+    );
+  }
 
   const protocol = (test.protocol as typeof DEFAULT_PROTOCOL) ?? DEFAULT_PROTOCOL;
 
@@ -83,7 +93,7 @@ export default async function SessionPage({ params }: { params: { id: string } }
       </div>
 
       <SessionDetail
-        testId={params.id}
+        testId={testId}
         protocol={protocol}
         initialPoints={(points ?? []) as LactatePoint[]}
         initialNotes={test.notes}
