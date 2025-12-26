@@ -30,7 +30,8 @@ export default async function LactateLayout({ children }: { children: React.Reac
             </Link>
             <Link
               href="/lactate/new"
-              className="rounded-full bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+              prefetch={false}
+              className="rounded-full bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-200"
             >
               New test
             </Link>

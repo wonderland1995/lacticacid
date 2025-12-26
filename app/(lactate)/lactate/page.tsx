@@ -57,7 +57,8 @@ export default async function LactatePage() {
         </div>
         <Link
           href="/lactate/new"
-          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+          prefetch={false}
+          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-200"
         >
           Start new test
         </Link>

@@ -4,6 +4,7 @@ import { TestRunner } from "@/components/TestRunner";
 import { getServerClient } from "@/lib/supabase-server";
 import { DEFAULT_PROTOCOL, type LactatePoint } from "@/lib/types";
 import { GuestPrompt } from "../../components/GuestPrompt";
+import { createTestAction } from "@/app/actions/lactate";
 
 const authDisabled =
   process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
@@ -11,12 +12,21 @@ const serviceRoleMissing = authDisabled && !process.env.SUPABASE_SERVICE_ROLE_KE
 
 export const dynamic = "force-dynamic";
 
+async function createAndRedirect() {
+  "use server";
+  const result = await createTestAction();
+  if (result?.data?.id) {
+    redirect(`/lactate/new?testId=${result.data.id}`);
+  }
+  throw new Error(result.error ?? "Failed to create test");
+}
+
 export default async function NewTestPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   if (serviceRoleMissing) {
     return (
       <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
-        Guest mode is enabled but SUPABASE_SERVICE_ROLE_KEY is not set. Add it to the server env (Supabase → Settings → API
-        → service_role) and redeploy.
+        Guest mode is enabled but SUPABASE_SERVICE_ROLE_KEY is not set. Add it to the server env (Supabase → Settings → API →
+        service_role) and redeploy.
       </div>
     );
   }
@@ -32,26 +42,25 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
   const testId = typeof searchParams.testId === "string" ? searchParams.testId : null;
 
   if (!testId) {
-    const { data, error } = await supabase
-      .from("lactate_tests")
-      .insert({
-        user_id: userId,
-        title: "Lactate Threshold Test",
-        sport: "running",
-        protocol: DEFAULT_PROTOCOL,
-        started_at: new Date().toISOString(),
-      })
-      .select("*")
-      .single();
-
-    if (error || !data) {
-      return (
-        <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
-          Failed to create test: {error?.message}
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl bg-white/80 p-6 shadow-sm ring-1 ring-slate-200">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">New test</p>
+          <h1 className="text-3xl font-semibold text-slate-900">Create a lactate test</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            We’ll create a single test record for this session. You can reuse it and add points as you go.
+          </p>
+          <form action={createAndRedirect} className="mt-4">
+            <button
+              type="submit"
+              className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            >
+              Create test and start
+            </button>
+          </form>
         </div>
-      );
-    }
-    redirect(`/lactate/new?testId=${data.id}`);
+      </div>
+    );
   }
 
   const { data: test, error: testError } = authDisabled
