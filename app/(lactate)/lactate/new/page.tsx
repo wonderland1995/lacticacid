@@ -7,7 +7,7 @@ import { DEFAULT_PROTOCOL, type LactatePoint } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export default async function NewTestPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
-  const supabase = getServerClient();
+  const supabase = await getServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

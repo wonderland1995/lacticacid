@@ -7,7 +7,7 @@ import { displayDate } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export default async function LactatePage() {
-  const supabase = getServerClient();
+  const supabase = await getServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -3,7 +3,7 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 import { getServerClient } from "@/lib/supabase-server";
 
 export default async function LactateLayout({ children }: { children: React.ReactNode }) {
-  const supabase = getServerClient();
+  const supabase = await getServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

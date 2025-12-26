@@ -7,7 +7,7 @@ import { DEFAULT_PROTOCOL, type LactatePoint, type LactateProtocol, type Lactate
 type ActionResult<T> = { data?: T; error?: string };
 
 async function requireUser() {
-  const supabase = getServerClient();
+  const supabase = await getServerClient();
   const {
     data: { user },
     error,
