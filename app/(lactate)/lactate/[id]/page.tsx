@@ -29,7 +29,7 @@ export default async function SessionPage({ params }: { params: { id: string } }
   const userId = authDisabled ? guestId : (await supabase.auth.getUser()).data.user?.id;
 
   if (!userId) {
-    return <GuestPrompt nextLabel="session" />;
+    return <GuestPrompt nextLabel="session" redirectTo={`/lactate/${params.id}`} />;
   }
 
   const { data: test, error } = await supabase

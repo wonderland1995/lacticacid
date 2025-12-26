@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getServerClient } from "@/lib/supabase-server";
 
@@ -8,12 +9,13 @@ export async function startGuestSession(formData: FormData) {
     throw new Error("Guest mode requires SUPABASE_SERVICE_ROLE_KEY to be set on the server.");
   }
   const name = (formData.get("name") as string | null)?.trim() || "Guest";
+  const redirectTo = (formData.get("redirectTo") as string | null) || "/lactate";
   const cookieStore = await cookies();
 
   const existingId = cookieStore.get("guest_user_id")?.value;
   if (existingId) {
     cookieStore.set({ name: "guest_user_name", value: name, path: "/", sameSite: "lax" });
-    return;
+    redirect(redirectTo);
   }
 
   const supabase = await getServerClient();
@@ -37,4 +39,5 @@ export async function startGuestSession(formData: FormData) {
     maxAge: 60 * 60 * 24 * 30, // 30 days
   });
   cookieStore.set({ name: "guest_user_name", value: name, path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 30 });
+  redirect(redirectTo);
 }

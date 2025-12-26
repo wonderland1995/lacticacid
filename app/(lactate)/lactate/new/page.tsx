@@ -26,7 +26,7 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
   const guestId = cookieStore.get("guest_user_id")?.value;
   const userId = authDisabled ? guestId : (await supabase.auth.getUser()).data.user?.id;
   if (!userId) {
-    return <GuestPrompt nextLabel="start" />;
+    return <GuestPrompt nextLabel="start" redirectTo="/lactate/new" />;
   }
 
   const testId = typeof searchParams.testId === "string" ? searchParams.testId : null;
