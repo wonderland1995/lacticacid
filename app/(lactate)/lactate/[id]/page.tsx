@@ -13,6 +13,14 @@ const serviceRoleMissing = authDisabled && !process.env.SUPABASE_SERVICE_ROLE_KE
 export const dynamic = "force-dynamic";
 
 export default async function SessionPage({ params }: { params: { id: string } }) {
+  if (!params.id || params.id === "undefined") {
+    return (
+      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
+        Invalid session id.
+      </div>
+    );
+  }
+
   if (serviceRoleMissing) {
     return (
       <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">

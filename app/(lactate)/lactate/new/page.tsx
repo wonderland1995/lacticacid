@@ -18,7 +18,8 @@ async function createAndRedirect() {
   if (result?.data?.id) {
     redirect(`/lactate/new?testId=${result.data.id}`);
   }
-  throw new Error(result.error ?? "Failed to create test");
+  const msg = encodeURIComponent(result.error ?? "Failed to create test");
+  redirect(`/lactate/new?error=${msg}`);
 }
 
 export default async function NewTestPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
@@ -40,6 +41,7 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
   }
 
   const testId = typeof searchParams.testId === "string" ? searchParams.testId : null;
+  const errorMsg = typeof searchParams.error === "string" ? decodeURIComponent(searchParams.error) : null;
 
   if (!testId) {
     return (
@@ -50,6 +52,7 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
           <p className="mt-2 text-sm text-slate-600">
             We’ll create a single test record for this session. You can reuse it and add points as you go.
           </p>
+          {errorMsg && <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">Failed: {errorMsg}</p>}
           <form action={createAndRedirect} className="mt-4">
             <button
               type="submit"
