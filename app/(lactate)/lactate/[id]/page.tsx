@@ -1,23 +1,24 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { AuthForm } from "@/components/auth/AuthForm";
 import { SessionDetail } from "@/components/SessionDetail";
 import { getServerClient } from "@/lib/supabase-server";
 import { DEFAULT_PROTOCOL, type LactatePoint } from "@/lib/types";
 import { displayDate } from "@/lib/utils";
 
+const authDisabled =
+  process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
+const demoUserId = process.env.SUPABASE_DEMO_USER_ID;
+
 export const dynamic = "force-dynamic";
 
 export default async function SessionPage({ params }: { params: { id: string } }) {
   const supabase = await getServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = authDisabled ? demoUserId : (await supabase.auth.getUser()).data.user?.id;
 
-  if (!user) {
+  if (!userId) {
     return (
-      <div className="flex justify-center">
-        <AuthForm redirectTo={`/lactate/${params.id}`} title="Sign in to view this session" />
+      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
+        No user available. Set SUPABASE_DEMO_USER_ID or sign in.
       </div>
     );
   }
@@ -26,7 +27,7 @@ export default async function SessionPage({ params }: { params: { id: string } }
     .from("lactate_tests")
     .select("*")
     .eq("id", params.id)
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .single();
 
   if (error || !test) {

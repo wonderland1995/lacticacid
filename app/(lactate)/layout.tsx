@@ -1,13 +1,9 @@
 import Link from "next/link";
-import { SignOutButton } from "@/components/auth/SignOutButton";
-import { getServerClient } from "@/lib/supabase-server";
+
+const authDisabled =
+  process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
 
 export default async function LactateLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await getServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white/70 backdrop-blur">
@@ -34,19 +30,10 @@ export default async function LactateLayout({ children }: { children: React.Reac
             >
               New test
             </Link>
-            {user ? (
-              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-sm text-slate-700 shadow-sm">
-                <span className="hidden sm:inline">{user.email}</span>
-                <span className="text-xs text-slate-400">|</span>
-                <SignOutButton />
-              </div>
-            ) : (
-              <Link
-                href="/lactate"
-                className="rounded-full border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-500"
-              >
-                Sign in
-              </Link>
+            {authDisabled && (
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                Demo mode
+              </span>
             )}
           </nav>
         </div>

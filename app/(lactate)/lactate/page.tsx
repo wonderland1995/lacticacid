@@ -1,21 +1,22 @@
 import Link from "next/link";
-import { AuthForm } from "@/components/auth/AuthForm";
 import { getServerClient } from "@/lib/supabase-server";
 import { DEFAULT_PROTOCOL } from "@/lib/types";
 import { displayDate } from "@/lib/utils";
+
+const authDisabled =
+  process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
+const demoUserId = process.env.SUPABASE_DEMO_USER_ID;
 
 export const dynamic = "force-dynamic";
 
 export default async function LactatePage() {
   const supabase = await getServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = authDisabled ? demoUserId : (await supabase.auth.getUser()).data.user?.id;
 
-  if (!user) {
+  if (!userId) {
     return (
-      <div className="flex justify-center">
-        <AuthForm redirectTo="/lactate" />
+      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
+        No user available. Set SUPABASE_DEMO_USER_ID or sign in.
       </div>
     );
   }
@@ -23,13 +24,13 @@ export default async function LactatePage() {
   const { data: tests, error } = await supabase
     .from("lactate_tests")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   const { data: pointCounts } = await supabase
     .from("lactate_points")
     .select("test_id, stage_index")
-    .eq("user_id", user.id);
+    .eq("user_id", userId);
 
   const countMap = new Map<string, number>();
   pointCounts?.forEach((p) => {

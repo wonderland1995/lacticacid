@@ -4,10 +4,20 @@ import { revalidatePath } from "next/cache";
 import { getServerClient } from "@/lib/supabase-server";
 import { DEFAULT_PROTOCOL, type LactatePoint, type LactateProtocol, type LactateTest } from "@/lib/types";
 
+const authDisabled =
+  process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
+const demoUserId = process.env.SUPABASE_DEMO_USER_ID;
+
 type ActionResult<T> = { data?: T; error?: string };
 
 async function requireUser() {
   const supabase = await getServerClient();
+  if (authDisabled) {
+    if (!demoUserId) {
+      return { supabase, user: null, error: "Set SUPABASE_DEMO_USER_ID when auth is disabled." };
+    }
+    return { supabase, user: { id: demoUserId }, error: null };
+  }
   const {
     data: { user },
     error,

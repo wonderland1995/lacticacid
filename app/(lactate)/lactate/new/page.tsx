@@ -1,21 +1,21 @@
 import { redirect } from "next/navigation";
-import { AuthForm } from "@/components/auth/AuthForm";
 import { TestRunner } from "@/components/TestRunner";
 import { getServerClient } from "@/lib/supabase-server";
 import { DEFAULT_PROTOCOL, type LactatePoint } from "@/lib/types";
+
+const authDisabled =
+  process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
+const demoUserId = process.env.SUPABASE_DEMO_USER_ID;
 
 export const dynamic = "force-dynamic";
 
 export default async function NewTestPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const supabase = await getServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  const userId = authDisabled ? demoUserId : (await supabase.auth.getUser()).data.user?.id;
+  if (!userId) {
     return (
-      <div className="flex justify-center">
-        <AuthForm redirectTo="/lactate/new" title="Start a new lactate test" />
+      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
+        No user available. Set SUPABASE_DEMO_USER_ID or sign in.
       </div>
     );
   }
@@ -26,7 +26,7 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
     const { data, error } = await supabase
       .from("lactate_tests")
       .insert({
-        user_id: user.id,
+        user_id: userId,
         title: "Lactate Threshold Test",
         sport: "running",
         protocol: DEFAULT_PROTOCOL,
@@ -49,7 +49,7 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
     .from("lactate_tests")
     .select("*")
     .eq("id", testId)
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .single();
 
   if (testError || !test) {
