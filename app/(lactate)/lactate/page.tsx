@@ -107,7 +107,7 @@ export default async function LactatePage() {
                 </div>
                 <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
                   <span>{test.completed_at ? "Completed" : "In progress"}</span>
-                  <span className="text-slate-400">View details →</span>
+                  <span className="text-slate-400">View details -&gt;</span>
                 </div>
               </Link>
             );
