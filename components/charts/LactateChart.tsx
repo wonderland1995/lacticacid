@@ -22,22 +22,27 @@ type Props = {
   lt2Hr?: number | null;
 };
 
+type ChartPointPayload = {
+  hr?: number | null;
+  lactate?: number;
+  pace?: number;
+  speed?: number | null;
+  stage?: number;
+  metrics?: Record<string, unknown>;
+};
+
+type ChartTooltipProps = TooltipProps<number, string> & { payload?: ReadonlyArray<{ payload: ChartPointPayload }> };
+
 export function LactateChart({ points, mode = "pace", lt1Hr, lt2Hr }: Props) {
   const normalized = points.map((p) => ({ ...p, metrics: p.metrics ?? {} }));
   if (!normalized.length) {
     return <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm text-slate-600">No data yet</div>;
   }
 
-  const tooltipContent = ({ active, payload }: TooltipProps<number, string>) => {
+  const tooltipContent = (props: ChartTooltipProps) => {
+    const { active, payload } = props;
     if (!active || !payload?.length) return null;
-    const item = payload[0]?.payload as {
-      hr?: number | null;
-      lactate?: number;
-      pace?: number;
-      speed?: number | null;
-      stage?: number;
-      metrics?: Record<string, unknown>;
-    };
+    const item = payload[0]?.payload;
     if (!item) return null;
     const metrics = item.metrics ?? {};
     const metricEntries = Object.entries(metrics);

@@ -429,20 +429,21 @@ export function SessionDetail({ testId, protocol, initialPoints, initialNotes }:
           setImportErrors([result.error]);
           return;
         }
-        if (result.data) {
+        const imported = result.data ?? [];
+        if (imported.length) {
           setPoints((prev) => {
             const map = new Map<number, LactatePoint>();
-            [...prev, ...result.data.map((p) => ({ ...p, metrics: p.metrics ?? {} }))].forEach((p) => {
+            [...prev, ...imported.map((p) => ({ ...p, metrics: p.metrics ?? {} }))].forEach((p) => {
               map.set(p.stage_index, p);
             });
             return Array.from(map.values()).sort((a, b) => a.stage_index - b.stage_index);
           });
           setCustomMetricKeys((prev) => Array.from(new Set([...prev, ...parsedMetricKeys])));
-          setMessage(`Imported ${rows.length} rows.`);
-          setImportRaw("");
-          setImportOpen(false);
-          setImportErrors([]);
         }
+        setMessage(`Imported ${rows.length} rows.`);
+        setImportRaw("");
+        setImportOpen(false);
+        setImportErrors([]);
       })();
     });
   };
