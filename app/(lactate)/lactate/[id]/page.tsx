@@ -12,8 +12,16 @@ const serviceRoleMissing = authDisabled && !process.env.SUPABASE_SERVICE_ROLE_KE
 
 export const dynamic = "force-dynamic";
 
-export default async function SessionPage({ params }: { params: { id: string } }) {
-  const testId = params.id;
+export default async function SessionPage({
+  params,
+  searchParams,
+}: {
+  params: { id?: string };
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const testId =
+    params?.id ||
+    (typeof searchParams?.id === "string" ? searchParams.id : Array.isArray(searchParams?.id) ? searchParams?.id[0] : "");
 
   if (serviceRoleMissing) {
     return (
@@ -36,7 +44,7 @@ export default async function SessionPage({ params }: { params: { id: string } }
   if (!testId) {
     return (
       <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
-        Missing session id.
+        Missing session id. Try reloading or use the Sessions page links.
       </div>
     );
   }
