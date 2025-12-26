@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import clsx from "clsx";
 import { completeTestAction, upsertPointAction } from "@/app/actions/lactate";
 import { LactateChart } from "@/components/charts/LactateChart";
