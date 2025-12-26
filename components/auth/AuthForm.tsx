@@ -14,16 +14,17 @@ export function AuthForm({
   title = "Sign in to save your tests",
   subtitle = "Use an email magic link to authenticate. No passwords, just a quick link.",
 }: Props) {
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const callbackUrl = useMemo(() => {
-    if (typeof window === "undefined") return `${redirectTo}`;
-    const origin = window.location.origin;
-    return `${origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`;
-  }, [redirectTo]);
+    const base = siteUrl || (typeof window !== "undefined" ? window.location.origin : "");
+    if (!base) return `${redirectTo}`;
+    return `${base}/auth/callback?next=${encodeURIComponent(redirectTo)}`;
+  }, [redirectTo, siteUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
