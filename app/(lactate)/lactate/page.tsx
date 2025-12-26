@@ -30,16 +30,17 @@ export default async function LactatePage() {
     return <GuestPrompt nextLabel="sessions" redirectTo="/lactate" />;
   }
 
-  const { data: tests, error } = await supabase
-    .from("lactate_tests")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+  const { data: tests, error } = authDisabled
+    ? await supabase.from("lactate_tests").select("*").order("created_at", { ascending: false }).limit(100)
+    : await supabase
+        .from("lactate_tests")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
 
-  const { data: pointCounts } = await supabase
-    .from("lactate_points")
-    .select("test_id, stage_index")
-    .eq("user_id", userId);
+  const { data: pointCounts } = authDisabled
+    ? await supabase.from("lactate_points").select("test_id, stage_index")
+    : await supabase.from("lactate_points").select("test_id, stage_index").eq("user_id", userId);
 
   const countMap = new Map<string, number>();
   pointCounts?.forEach((p) => {

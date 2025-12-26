@@ -54,12 +54,14 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
     redirect(`/lactate/new?testId=${data.id}`);
   }
 
-  const { data: test, error: testError } = await supabase
-    .from("lactate_tests")
-    .select("*")
-    .eq("id", testId)
-    .eq("user_id", userId)
-    .single();
+  const { data: test, error: testError } = authDisabled
+    ? await supabase.from("lactate_tests").select("*").eq("id", testId).single()
+    : await supabase
+        .from("lactate_tests")
+        .select("*")
+        .eq("id", testId)
+        .eq("user_id", userId)
+        .single();
 
   if (testError || !test) {
     return (

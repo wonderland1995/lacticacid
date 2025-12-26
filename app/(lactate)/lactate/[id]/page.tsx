@@ -32,12 +32,14 @@ export default async function SessionPage({ params }: { params: { id: string } }
     return <GuestPrompt nextLabel="session" redirectTo={`/lactate/${params.id}`} />;
   }
 
-  const { data: test, error } = await supabase
-    .from("lactate_tests")
-    .select("*")
-    .eq("id", params.id)
-    .eq("user_id", userId)
-    .single();
+  const { data: test, error } = authDisabled
+    ? await supabase.from("lactate_tests").select("*").eq("id", params.id).single()
+    : await supabase
+        .from("lactate_tests")
+        .select("*")
+        .eq("id", params.id)
+        .eq("user_id", userId)
+        .single();
 
   if (error || !test) {
     return notFound();
