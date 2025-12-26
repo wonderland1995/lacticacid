@@ -70,49 +70,51 @@ export default async function LactatePage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {tests?.map((test) => {
-            const protocol = (test.protocol as typeof DEFAULT_PROTOCOL) ?? DEFAULT_PROTOCOL;
-            const recorded = countMap.get(test.id) ?? 0;
-            return (
-              <Link
-                key={test.id}
-                href={`/lactate/${test.id}`}
-                className="group relative overflow-hidden rounded-2xl bg-white/80 p-5 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-lg"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Running</p>
-                    <h3 className="text-lg font-semibold text-slate-900">{test.title}</h3>
-                    <p className="text-xs text-slate-500">Created {displayDate(test.created_at)}</p>
+          {(tests ?? [])
+            .filter((t) => !!t?.id)
+            .map((test) => {
+              const protocol = (test.protocol as typeof DEFAULT_PROTOCOL) ?? DEFAULT_PROTOCOL;
+              const recorded = countMap.get(test.id) ?? 0;
+              return (
+                <Link
+                  key={test.id}
+                  href={`/lactate/${test.id}`}
+                  className="group relative overflow-hidden rounded-2xl bg-white/80 p-5 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-lg"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-slate-500">Running</p>
+                      <h3 className="text-lg font-semibold text-slate-900">{test.title}</h3>
+                      <p className="text-xs text-slate-500">Created {displayDate(test.created_at)}</p>
+                    </div>
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                      {recorded}/{protocol.numStages} stages
+                    </span>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                    {recorded}/{protocol.numStages} stages
-                  </span>
-                </div>
-                <div className="mt-4 grid grid-cols-3 gap-3 text-sm text-slate-700">
-                  <div>
-                    <p className="text-xs uppercase text-slate-500">Warmup</p>
-                    <p className="font-semibold">{Math.round(protocol.warmupSeconds / 60)} min</p>
+                  <div className="mt-4 grid grid-cols-3 gap-3 text-sm text-slate-700">
+                    <div>
+                      <p className="text-xs uppercase text-slate-500">Warmup</p>
+                      <p className="font-semibold">{Math.round(protocol.warmupSeconds / 60)} min</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase text-slate-500">Stage</p>
+                      <p className="font-semibold">{Math.round(protocol.stageSeconds / 60)}:00 x {protocol.numStages}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase text-slate-500">Sampling</p>
+                      <p className="font-semibold">
+                        {Math.floor(protocol.sampleOffsetSeconds / 60)}:
+                        {(protocol.sampleOffsetSeconds % 60).toString().padStart(2, "0")} +{protocol.sampleWindowSeconds}s
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs uppercase text-slate-500">Stage</p>
-                    <p className="font-semibold">{Math.round(protocol.stageSeconds / 60)}:00 x {protocol.numStages}</p>
+                  <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
+                    <span>{test.completed_at ? "Completed" : "In progress"}</span>
+                    <span className="text-slate-400">View details -&gt;</span>
                   </div>
-                  <div>
-                    <p className="text-xs uppercase text-slate-500">Sampling</p>
-                    <p className="font-semibold">
-                      {Math.floor(protocol.sampleOffsetSeconds / 60)}:
-                      {(protocol.sampleOffsetSeconds % 60).toString().padStart(2, "0")} +{protocol.sampleWindowSeconds}s
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
-                  <span>{test.completed_at ? "Completed" : "In progress"}</span>
-                  <span className="text-slate-400">View details -&gt;</span>
-                </div>
-              </Link>
-            );
-          })}
+                </Link>
+              );
+            })}
         </div>
       )}
     </div>

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerClient } from "@/lib/supabase-server";
 
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://lacticacid-production.up.railway.app").replace(/\/$/, "");
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -11,5 +13,6 @@ export async function GET(request: Request) {
   }
 
   const redirectTo = requestUrl.searchParams.get("next") || "/lactate";
-  return NextResponse.redirect(new URL(redirectTo, requestUrl.origin));
+  const base = siteUrl || requestUrl.origin;
+  return NextResponse.redirect(new URL(redirectTo, base));
 }

@@ -8,6 +8,18 @@ import { displayDate } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export default async function SessionPage({ params }: { params: { id: string } }) {
+  if (!params?.id || params.id === "undefined") {
+    return (
+      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
+        Missing session id. Go back to{" "}
+        <Link href="/lactate" className="font-semibold text-slate-900 underline">
+          Sessions
+        </Link>{" "}
+        and re-open a test.
+      </div>
+    );
+  }
+
   const supabase = await getServerClient();
   const {
     data: { user },
