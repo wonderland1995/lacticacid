@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { SessionDetail } from "@/components/SessionDetail";
-import { getServerClient } from "@/lib/supabase";
+import { getServerClient } from "@/lib/supabase-server";
 import { DEFAULT_PROTOCOL, type LactatePoint } from "@/lib/types";
 import { displayDate } from "@/lib/utils";
 

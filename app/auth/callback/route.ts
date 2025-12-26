@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerClient } from "@/lib/supabase";
+import { getServerClient } from "@/lib/supabase-server";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);

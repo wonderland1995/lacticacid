@@ -178,10 +178,11 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
           setError(result.error);
           return;
         }
-        if (result.data) {
+        const savedPoint = result.data;
+        if (savedPoint) {
           setPoints((prev) => {
-            const filtered = prev.filter((p) => p.stage_index !== result.data.stage_index);
-            return [...filtered, result.data].sort((a, b) => a.stage_index - b.stage_index);
+            const filtered = prev.filter((p) => p.stage_index !== savedPoint.stage_index);
+            return [...filtered, savedPoint].sort((a, b) => a.stage_index - b.stage_index);
           });
           setForm((prev) => ({
             ...prev,

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getServerClient } from "@/lib/supabase";
+import { getServerClient } from "@/lib/supabase-server";
 import { DEFAULT_PROTOCOL, type LactatePoint, type LactateProtocol, type LactateTest } from "@/lib/types";
 
 type ActionResult<T> = { data?: T; error?: string };
@@ -13,9 +13,9 @@ async function requireUser() {
     error,
   } = await supabase.auth.getUser();
   if (error || !user) {
-    return { supabase, user: null as const, error: error?.message ?? "Not signed in" };
+    return { supabase, user: null, error: error?.message ?? "Not signed in" };
   }
-  return { supabase, user, error: null as const };
+  return { supabase, user, error: null };
 }
 
 export async function createTestAction(options?: {

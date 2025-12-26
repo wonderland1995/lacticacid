@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { getBrowserClient } from "@/lib/supabase";
+import { getBrowserClient } from "@/lib/supabase-browser";
 
 type Props = {
   redirectTo?: string;

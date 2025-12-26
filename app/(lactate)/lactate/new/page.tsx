@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { TestRunner } from "@/components/TestRunner";
-import { getServerClient } from "@/lib/supabase";
+import { getServerClient } from "@/lib/supabase-server";
 import { DEFAULT_PROTOCOL, type LactatePoint } from "@/lib/types";
 
 export const dynamic = "force-dynamic";

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/auth/AuthForm";
-import { getServerClient } from "@/lib/supabase";
+import { getServerClient } from "@/lib/supabase-server";
 import { DEFAULT_PROTOCOL } from "@/lib/types";
 import { displayDate } from "@/lib/utils";
 
