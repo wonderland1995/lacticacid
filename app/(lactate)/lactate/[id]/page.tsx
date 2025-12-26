@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import { SessionDetail } from "@/components/SessionDetail";
 import { getServerClient } from "@/lib/supabase-server";
@@ -42,7 +41,11 @@ export default async function SessionPage({ params }: { params: { id: string } }
         .single();
 
   if (error || !test) {
-    return notFound();
+    return (
+      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
+        Failed to load session. {error?.message ?? "Not found."}
+      </div>
+    );
   }
 
   const { data: points } = await supabase

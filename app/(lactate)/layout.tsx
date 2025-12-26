@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { logoutAction } from "@/app/actions/logout";
 
 const authDisabled =
   process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
@@ -36,9 +37,17 @@ export default async function LactateLayout({ children }: { children: React.Reac
               New test
             </Link>
             {authDisabled && (
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                {guestName ? `Guest: ${guestName}` : "Guest mode"}
-              </span>
+              <form action={logoutAction} className="flex items-center gap-2">
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  {guestName ? `Guest: ${guestName}` : "Guest mode"}
+                </span>
+                <button
+                  type="submit"
+                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-200"
+                >
+                  Log out
+                </button>
+              </form>
             )}
           </nav>
         </div>
