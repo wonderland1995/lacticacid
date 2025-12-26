@@ -1,23 +1,22 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { TestRunner } from "@/components/TestRunner";
 import { getServerClient } from "@/lib/supabase-server";
 import { DEFAULT_PROTOCOL, type LactatePoint } from "@/lib/types";
+import { GuestPrompt } from "../../components/GuestPrompt";
 
 const authDisabled =
   process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
-const demoUserId = process.env.SUPABASE_DEMO_USER_ID;
 
 export const dynamic = "force-dynamic";
 
 export default async function NewTestPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const supabase = await getServerClient();
-  const userId = authDisabled ? demoUserId : (await supabase.auth.getUser()).data.user?.id;
+  const cookieStore = await cookies();
+  const guestId = cookieStore.get("guest_user_id")?.value;
+  const userId = authDisabled ? guestId : (await supabase.auth.getUser()).data.user?.id;
   if (!userId) {
-    return (
-      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
-        No user available. Set SUPABASE_DEMO_USER_ID or sign in.
-      </div>
-    );
+    return <GuestPrompt nextLabel="start" />;
   }
 
   const testId = typeof searchParams.testId === "string" ? searchParams.testId : null;

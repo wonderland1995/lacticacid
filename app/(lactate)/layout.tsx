@@ -1,9 +1,13 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 const authDisabled =
   process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
 
 export default async function LactateLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const guestName = cookieStore.get("guest_user_name")?.value;
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white/70 backdrop-blur">
@@ -32,7 +36,7 @@ export default async function LactateLayout({ children }: { children: React.Reac
             </Link>
             {authDisabled && (
               <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                Demo mode
+                {guestName ? `Guest: ${guestName}` : "Guest mode"}
               </span>
             )}
           </nav>
