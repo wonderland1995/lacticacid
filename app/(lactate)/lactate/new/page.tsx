@@ -20,7 +20,7 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
     );
   }
 
-  let testId = typeof searchParams.testId === "string" ? searchParams.testId : null;
+  const testId = typeof searchParams.testId === "string" ? searchParams.testId : null;
 
   if (!testId) {
     const { data, error } = await supabase

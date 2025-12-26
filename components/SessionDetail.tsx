@@ -234,9 +234,9 @@ export function SessionDetail({ testId, protocol, initialPoints, initialNotes }:
                       <td className="px-4 py-2 font-semibold text-slate-800">{p.stage_index}</td>
                       <td className="px-4 py-2 text-slate-700">{formatPace(p.pace_seconds_per_km)}</td>
                       <td className="px-4 py-2 text-slate-700">{p.lactate_mmol} mmol/L</td>
-                      <td className="px-4 py-2 text-slate-700">{p.hr_bpm ?? "—"}</td>
-                      <td className="px-4 py-2 text-slate-700">{p.rpe ?? "—"}</td>
-                      <td className="px-4 py-2 text-slate-700">{p.comments ?? "—"}</td>
+                      <td className="px-4 py-2 text-slate-700">{p.hr_bpm ?? "-"}</td>
+                      <td className="px-4 py-2 text-slate-700">{p.rpe ?? "-"}</td>
+                      <td className="px-4 py-2 text-slate-700">{p.comments ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -286,7 +286,7 @@ export function SessionDetail({ testId, protocol, initialPoints, initialNotes }:
               <dt>Sample timing</dt>
               <dd>
                 {Math.floor(protocol.sampleOffsetSeconds / 60)}:
-                {(protocol.sampleOffsetSeconds % 60).toString().padStart(2, "0")} ± {protocol.sampleWindowSeconds}s
+                {(protocol.sampleOffsetSeconds % 60).toString().padStart(2, "0")} +/- {protocol.sampleWindowSeconds}s
               </dd>
             </div>
           </dl>

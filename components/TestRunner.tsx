@@ -35,28 +35,12 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const lastCountdownRef = useRef<number | null>(null);
   const stageBeepedRef = useRef<number | null>(null);
+  const completionCalledRef = useRef(false);
 
   const totalDuration = useMemo(
     () => protocol.warmupSeconds + protocol.stageSeconds * protocol.numStages,
     [protocol],
   );
-
-  useEffect(() => {
-    if (!isRunning) return;
-    const id = window.setInterval(() => {
-      setElapsed((prev) => prev + 1);
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, [isRunning]);
-
-  useEffect(() => {
-    if (elapsed >= totalDuration && isRunning) {
-      setIsRunning(false);
-      startCompleting(() => {
-        void completeTestAction(testId);
-      });
-    }
-  }, [elapsed, isRunning, startCompleting, testId, totalDuration]);
 
   const inWarmup = elapsed < protocol.warmupSeconds;
   const stageElapsedTotal = Math.max(0, elapsed - protocol.warmupSeconds);
@@ -69,6 +53,24 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
     : Math.max(0, protocol.stageSeconds - stageElapsed);
   const totalRemaining = Math.max(0, totalDuration - elapsed);
   const isComplete = elapsed >= totalDuration;
+  const timerActive = isRunning && !isComplete;
+
+  useEffect(() => {
+    if (!timerActive) return;
+    const id = window.setInterval(() => {
+      setElapsed((prev) => prev + 1);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [timerActive]);
+
+  useEffect(() => {
+    if (isComplete && !completionCalledRef.current) {
+      completionCalledRef.current = true;
+      startCompleting(() => {
+        void completeTestAction(testId);
+      });
+    }
+  }, [isComplete, startCompleting, testId]);
 
   const [form, setForm] = useState<FormState>({
     stageIndex: currentStageNumber || 1,
@@ -78,39 +80,37 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
     rpe: "",
     comments: "",
   });
-
-  useEffect(() => {
-    if (currentStageNumber > 0 && !manualStage) {
-      setForm((prev) => ({ ...prev, stageIndex: currentStageNumber }));
-    }
-  }, [currentStageNumber, manualStage]);
+  const activeStageIndex = manualStage || currentStageNumber === 0 ? form.stageIndex : currentStageNumber;
 
   useEffect(() => {
     lastCountdownRef.current = null;
     stageBeepedRef.current = null;
   }, [stageIndex]);
 
-  const playBeep = (count: number) => {
-    if (!beepEnabled) return;
-    if (typeof window === "undefined") return;
-    const ctx = audioCtxRef.current ?? new AudioContext();
-    audioCtxRef.current = ctx;
-    ctx.resume();
+  const playBeep = useCallback(
+    (count: number) => {
+      if (!beepEnabled) return;
+      if (typeof window === "undefined") return;
+      const ctx = audioCtxRef.current ?? new AudioContext();
+      audioCtxRef.current = ctx;
+      ctx.resume();
 
-    for (let i = 0; i < count; i++) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const start = ctx.currentTime + i * 0.25;
-      const end = start + 0.2;
-      osc.frequency.value = i === count - 1 && count > 1 ? 1200 : 900;
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.35, start + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, end);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(start);
-      osc.stop(end);
-    }
-  };
+      for (let i = 0; i < count; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const start = ctx.currentTime + i * 0.25;
+        const end = start + 0.2;
+        osc.frequency.value = i === count - 1 && count > 1 ? 1200 : 900;
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.35, start + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, end);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(start);
+        osc.stop(end);
+      }
+    },
+    [beepEnabled],
+  );
 
   useEffect(() => {
     if (inWarmup || isComplete) return;
@@ -133,10 +133,10 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
     beepEnabled,
     inWarmup,
     isComplete,
+    playBeep,
     protocol.sampleOffsetSeconds,
     stageElapsed,
     stageIndex,
-    protocol.sampleWindowSeconds,
   ]);
 
   const handleSave = (e: React.FormEvent) => {
@@ -144,7 +144,7 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
     setStatus(null);
     setError(null);
 
-    const stageIndexValue = Number(form.stageIndex);
+    const stageIndexValue = Number(activeStageIndex);
     const paceSeconds = parsePaceInput(form.pace);
     const lactateValue = Number(form.lactate);
     if (!Number.isFinite(stageIndexValue) || stageIndexValue < 1) {
@@ -255,14 +255,16 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <button
               onClick={() => setIsRunning((v) => !v)}
+              disabled={isComplete}
               className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
             >
-              {isRunning ? "Pause" : "Resume"}
+              {timerActive ? "Pause" : isComplete ? "Complete" : "Resume"}
             </button>
             <button
               onClick={() => {
                 setElapsed(0);
                 setIsRunning(false);
+                completionCalledRef.current = false;
               }}
               className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-500"
             >
@@ -272,6 +274,7 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
               onClick={() => {
                 setElapsed(totalDuration);
                 setIsRunning(false);
+                completionCalledRef.current = true;
                 startCompleting(() => {
                   void completeTestAction(testId);
                 });
@@ -294,7 +297,7 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
                 type="number"
                 min={1}
                 max={protocol.numStages}
-                value={form.stageIndex}
+                value={activeStageIndex}
                 onChange={(e) => {
                   setManualStage(true);
                   setForm((prev) => ({ ...prev, stageIndex: Number(e.target.value) }));
@@ -401,9 +404,9 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
                       <td className="px-4 py-2 font-semibold text-slate-800">{p.stage_index}</td>
                       <td className="px-4 py-2 text-slate-700">{formatPace(p.pace_seconds_per_km)}</td>
                       <td className="px-4 py-2 text-slate-700">{p.lactate_mmol} mmol/L</td>
-                      <td className="px-4 py-2 text-slate-700">{p.hr_bpm ?? "—"}</td>
-                      <td className="px-4 py-2 text-slate-700">{p.rpe ?? "—"}</td>
-                      <td className="px-4 py-2 text-slate-700">{p.comments ?? "—"}</td>
+                      <td className="px-4 py-2 text-slate-700">{p.hr_bpm ?? "-"}</td>
+                      <td className="px-4 py-2 text-slate-700">{p.rpe ?? "-"}</td>
+                      <td className="px-4 py-2 text-slate-700">{p.comments ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -440,7 +443,7 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
               <dt>Sample timing</dt>
               <dd>
                 {Math.floor(protocol.sampleOffsetSeconds / 60)}:
-                {(protocol.sampleOffsetSeconds % 60).toString().padStart(2, "0")} ± {protocol.sampleWindowSeconds}s
+                {(protocol.sampleOffsetSeconds % 60).toString().padStart(2, "0")} +/- {protocol.sampleWindowSeconds}s
               </dd>
             </div>
           </dl>

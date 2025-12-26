@@ -48,7 +48,7 @@ export function LactateChart({ points }: Props) {
           domain={domain}
           reversed
           tickFormatter={(v) => formatPace(Number(v)).replace("/km", "")}
-          label={{ value: "Pace (mm:ss per km — faster to the right)", position: "insideBottom", offset: -5 }}
+          label={{ value: "Pace (mm:ss per km - faster to the right)", position: "insideBottom", offset: -5 }}
         />
         <YAxis
           yAxisId="lactate"
@@ -77,7 +77,7 @@ export function LactateChart({ points }: Props) {
           labelFormatter={(value, payload) => {
             const stage = payload?.[0]?.payload?.stage;
             const paceLabel = formatPace(Number(value));
-            return stage ? `Stage ${stage} — ${paceLabel}` : paceLabel;
+            return stage ? `Stage ${stage} - ${paceLabel}` : paceLabel;
           }}
         />
         <Legend />

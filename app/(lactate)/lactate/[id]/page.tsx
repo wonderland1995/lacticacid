@@ -48,7 +48,7 @@ export default async function SessionPage({ params }: { params: { id: string } }
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Session detail</p>
           <h1 className="text-3xl font-semibold text-slate-900">{test.title}</h1>
           <p className="text-sm text-slate-600">
-            Started {displayDate(test.started_at)} · {test.completed_at ? `Completed ${displayDate(test.completed_at)}` : "In progress"}
+            Started {displayDate(test.started_at)} - {test.completed_at ? `Completed ${displayDate(test.completed_at)}` : "In progress"}
           </p>
         </div>
         <Link
