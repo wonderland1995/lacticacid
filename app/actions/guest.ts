@@ -4,6 +4,9 @@ import { cookies } from "next/headers";
 import { getServerClient } from "@/lib/supabase-server";
 
 export async function startGuestSession(formData: FormData) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Guest mode requires SUPABASE_SERVICE_ROLE_KEY to be set on the server.");
+  }
   const name = (formData.get("name") as string | null)?.trim() || "Guest";
   const cookieStore = await cookies();
 

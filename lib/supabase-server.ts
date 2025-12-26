@@ -19,9 +19,7 @@ export async function getServerClient() {
   if (!supabaseUrl || !keyToUse) {
     throw new Error("Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (or SUPABASE_SERVICE_ROLE_KEY).");
   }
-  if (authDisabled && !supabaseServiceRoleKey) {
-    throw new Error("Set SUPABASE_SERVICE_ROLE_KEY when DISABLE_AUTH=true to bypass RLS.");
-  }
+  // If auth is disabled we prefer the service role key, but allow anon so guards can render when it's missing.
 
   const cookieStore = await cookies();
   return createServerClient(supabaseUrl, keyToUse, {

@@ -11,6 +11,9 @@ const authDisabled =
 type ActionResult<T> = { data?: T; error?: string };
 
 async function requireUser() {
+  if (authDisabled && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { supabase: null as any, user: null, error: "Guest mode requires SUPABASE_SERVICE_ROLE_KEY on the server." };
+  }
   const supabase = await getServerClient();
   if (authDisabled) {
     const cookieStore = await cookies();

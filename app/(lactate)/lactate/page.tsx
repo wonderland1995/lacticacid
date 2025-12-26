@@ -7,10 +7,20 @@ import { GuestPrompt } from "../components/GuestPrompt";
 
 const authDisabled =
   process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
+const serviceRoleMissing = authDisabled && !process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const dynamic = "force-dynamic";
 
 export default async function LactatePage() {
+  if (serviceRoleMissing) {
+    return (
+      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
+        Guest mode is enabled but SUPABASE_SERVICE_ROLE_KEY is not set. Add it to the server env (Supabase → Settings → API
+        → service_role) and redeploy.
+      </div>
+    );
+  }
+
   const supabase = await getServerClient();
   const cookieStore = await cookies();
   const guestId = cookieStore.get("guest_user_id")?.value;
