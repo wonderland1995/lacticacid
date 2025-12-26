@@ -16,11 +16,12 @@ async function createAndRedirect() {
   redirect("/lactate");
 }
 
-export default async function NewTestPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
+export default async function NewTestPage({ searchParams }: PageProps<"/lactate/new">) {
   const supabase = await getServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const params = await searchParams;
 
   if (!user) {
     return (
@@ -30,7 +31,7 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
     );
   }
 
-  const testId = typeof searchParams.testId === "string" ? searchParams.testId : null;
+  const testId = typeof params.testId === "string" ? params.testId : null;
 
   if (!testId) {
     return (
@@ -39,7 +40,7 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">New test</p>
           <h1 className="text-3xl font-semibold text-slate-900">Create a lactate test</h1>
           <p className="mt-2 text-sm text-slate-600">
-            We'll create a single test record for this session. You can reuse it and add points as you go.
+            We&apos;ll create a single test record for this session. You can reuse it and add points as you go.
           </p>
           <form action={createAndRedirect} className="mt-4">
             <button

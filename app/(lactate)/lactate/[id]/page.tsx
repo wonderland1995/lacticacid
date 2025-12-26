@@ -22,11 +22,9 @@ function firstQueryValue(sp?: SearchParams, keys: string[] = ["id", "testId"]) {
 export default async function SessionPage({
   params,
   searchParams,
-}: {
-  params: { id?: string };
-  searchParams?: SearchParams;
-}) {
-  const testId = params?.id || firstQueryValue(searchParams);
+}: PageProps<"/lactate/[id]">) {
+  const [{ id }, sp] = await Promise.all([params, searchParams]);
+  const testId = id || firstQueryValue(sp);
 
   const supabase = await getServerClient();
   const {
