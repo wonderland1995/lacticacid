@@ -41,14 +41,6 @@ export default async function SessionPage({
     return <GuestPrompt nextLabel="session" redirectTo={`/lactate/${testId ?? ""}`} />;
   }
 
-  if (!testId) {
-    return (
-      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
-        Missing session id. Try reloading or use the Sessions page links.
-      </div>
-    );
-  }
-
   const { data: test, error } = authDisabled
     ? await supabase.from("lactate_tests").select("*").eq("id", testId).single()
     : await supabase
@@ -61,7 +53,7 @@ export default async function SessionPage({
   if (error || !test) {
     return (
       <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
-        Failed to load session {testId}. {error?.message ?? "Not found."}
+        Failed to load session {testId || "(missing id)"}. {error?.message ?? "Not found."}
       </div>
     );
   }
