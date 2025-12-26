@@ -82,12 +82,15 @@ export type UpsertPointInput = {
   hrBpm?: number | null;
   rpe?: number | null;
   comments?: string;
+  speedKmh?: number | null;
+  metrics?: Record<string, unknown>;
   measuredAt?: string;
 };
 
 export async function upsertPointAction(input: UpsertPointInput): Promise<ActionResult<LactatePoint>> {
   const { supabase, user, error } = await requireUser();
   if (!user) return { error };
+  const metricsPayload = input.metrics ?? {};
   const payload = {
     test_id: input.testId,
     user_id: user.id,
@@ -97,6 +100,8 @@ export async function upsertPointAction(input: UpsertPointInput): Promise<Action
     hr_bpm: input.hrBpm ?? null,
     rpe: input.rpe ?? null,
     comments: input.comments ?? null,
+    speed_kmh: input.speedKmh ?? null,
+    metrics: metricsPayload,
     measured_at: input.measuredAt ?? new Date().toISOString(),
   };
 
@@ -110,4 +115,47 @@ export async function upsertPointAction(input: UpsertPointInput): Promise<Action
   revalidatePath(`/lactate/${input.testId}`);
   revalidatePath("/lactate");
   return { data: data as LactatePoint };
+}
+
+export type ImportPointInput = {
+  stageIndex: number;
+  paceSecondsPerKm: number;
+  lactateMmol: number;
+  hrBpm?: number | null;
+  speedKmh?: number | null;
+  rpe?: number | null;
+  comments?: string;
+  metrics?: Record<string, unknown>;
+  measuredAt?: string;
+};
+
+export async function importPointsAction(testId: string, rows: ImportPointInput[]): Promise<ActionResult<LactatePoint[]>> {
+  const { supabase, user, error } = await requireUser();
+  if (!user) return { error };
+  if (!rows.length) return { data: [] as LactatePoint[] };
+
+  const payload = rows.map((row) => ({
+    test_id: testId,
+    user_id: user.id,
+    stage_index: row.stageIndex,
+    pace_seconds_per_km: row.paceSecondsPerKm,
+    lactate_mmol: row.lactateMmol,
+    hr_bpm: row.hrBpm ?? null,
+    rpe: row.rpe ?? null,
+    comments: row.comments ?? null,
+    speed_kmh: row.speedKmh ?? null,
+    metrics: row.metrics ?? {},
+    measured_at: row.measuredAt ?? new Date().toISOString(),
+  }));
+
+  const { data, error: upsertError } = await supabase
+    .from("lactate_points")
+    .upsert(payload, { onConflict: "test_id,stage_index" })
+    .select("*")
+    .order("stage_index", { ascending: true });
+
+  if (upsertError) return { error: upsertError.message };
+  revalidatePath(`/lactate/${testId}`);
+  revalidatePath("/lactate");
+  return { data: data as LactatePoint[] };
 }

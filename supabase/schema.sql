@@ -19,10 +19,12 @@ create table if not exists public.lactate_points (
   user_id uuid not null references auth.users(id) on delete cascade,
   stage_index int not null,
   pace_seconds_per_km int not null,
+  speed_kmh numeric,
   lactate_mmol numeric not null,
   hr_bpm int,
   rpe int,
   comments text,
+  metrics jsonb not null default '{}'::jsonb,
   measured_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   unique(test_id, stage_index)

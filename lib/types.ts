@@ -32,10 +32,12 @@ export type LactatePoint = {
   user_id: string;
   stage_index: number;
   pace_seconds_per_km: number;
+  speed_kmh: number | null;
   lactate_mmol: number;
   hr_bpm: number | null;
   rpe: number | null;
   comments: string | null;
+  metrics: Record<string, unknown>;
   measured_at: string;
   created_at: string;
 };

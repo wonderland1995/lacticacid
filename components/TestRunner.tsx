@@ -14,6 +14,9 @@ type FormState = {
   hr: string;
   rpe: string;
   comments: string;
+  speed: string;
+  cadence: string;
+  metrics: string;
 };
 
 type Props = {
@@ -26,7 +29,7 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
   const [beepEnabled, setBeepEnabled] = useState(true);
-  const [points, setPoints] = useState<LactatePoint[]>(initialPoints);
+  const [points, setPoints] = useState<LactatePoint[]>(initialPoints.map((p) => ({ ...p, metrics: p.metrics ?? {} })));
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [manualStage, setManualStage] = useState(false);
@@ -79,6 +82,9 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
     hr: "",
     rpe: "",
     comments: "",
+    speed: "",
+    cadence: "",
+    metrics: "",
   });
   const activeStageIndex = manualStage || currentStageNumber === 0 ? form.stageIndex : currentStageNumber;
 
@@ -147,8 +153,9 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
     const stageIndexValue = Number(activeStageIndex);
     const paceSeconds = parsePaceInput(form.pace);
     const lactateValue = Number(form.lactate);
-    if (!Number.isFinite(stageIndexValue) || stageIndexValue < 1) {
-      setError("Stage index must be 1 or greater.");
+    const speedValue = form.speed ? Number(form.speed) : null;
+    if (!Number.isFinite(stageIndexValue) || stageIndexValue < 0) {
+      setError("Stage index must be 0 or greater.");
       return;
     }
     if (paceSeconds === null) {
@@ -158,6 +165,33 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
     if (!Number.isFinite(lactateValue) || lactateValue <= 0) {
       setError("Enter a valid lactate value.");
       return;
+    }
+    if (form.speed && !Number.isFinite(speedValue)) {
+      setError("Speed must be a number (km/h).");
+      return;
+    }
+
+    const metrics: Record<string, unknown> = {};
+    if (form.cadence.trim()) {
+      const cadenceValue = Number(form.cadence);
+      if (!Number.isFinite(cadenceValue) || cadenceValue <= 0) {
+        setError("Cadence must be a positive number.");
+        return;
+      }
+      metrics.cadence = cadenceValue;
+    }
+    if (form.metrics.trim()) {
+      try {
+        const parsed = JSON.parse(form.metrics);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          setError("Metrics JSON must be an object (e.g. {\"cadence\": 172}).");
+          return;
+        }
+        Object.assign(metrics, parsed);
+      } catch {
+        setError("Metrics JSON must be valid.");
+        return;
+      }
     }
 
     const hrValue = form.hr ? Number(form.hr) : null;
@@ -173,12 +207,14 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
           hrBpm: hrValue,
           rpe: rpeValue,
           comments: form.comments || undefined,
+          speedKmh: speedValue ?? null,
+          metrics: Object.keys(metrics).length ? metrics : undefined,
         });
         if (result.error) {
           setError(result.error);
           return;
         }
-        const savedPoint = result.data;
+        const savedPoint = result.data ? { ...result.data, metrics: result.data.metrics ?? {} } : null;
         if (savedPoint) {
           setPoints((prev) => {
             const filtered = prev.filter((p) => p.stage_index !== savedPoint.stage_index);
@@ -191,6 +227,9 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
             hr: "",
             rpe: "",
             comments: "",
+            speed: "",
+            cadence: "",
+            metrics: "",
           }));
           setStatus(`Saved stage ${stageIndexValue}.`);
         }
@@ -296,7 +335,7 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
               Stage #
               <input
                 type="number"
-                min={1}
+                min={0}
                 max={protocol.numStages}
                 value={activeStageIndex}
                 onChange={(e) => {
@@ -342,6 +381,18 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
               />
             </label>
             <label className="block text-sm font-medium text-slate-700">
+              Speed (km/h)
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={form.speed}
+                onChange={(e) => setForm((prev) => ({ ...prev, speed: e.target.value }))}
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                placeholder="Optional"
+              />
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
               RPE (1-10)
               <input
                 type="number"
@@ -351,6 +402,27 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
                 onChange={(e) => setForm((prev) => ({ ...prev, rpe: e.target.value }))}
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                 placeholder="Optional"
+              />
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
+              Cadence (spm)
+              <input
+                type="number"
+                min="0"
+                value={form.cadence}
+                onChange={(e) => setForm((prev) => ({ ...prev, cadence: e.target.value }))}
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                placeholder="Optional"
+              />
+            </label>
+            <label className="block text-sm font-medium text-slate-700 md:col-span-2">
+              Metrics (JSON)
+              <input
+                type="text"
+                value={form.metrics}
+                onChange={(e) => setForm((prev) => ({ ...prev, metrics: e.target.value }))}
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-inner outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                placeholder='Optional. Example: {"cadence": 172}'
               />
             </label>
             <label className="block text-sm font-medium text-slate-700 md:col-span-2">
@@ -393,9 +465,11 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
                   <tr>
                     <th className="px-4 py-2 text-left font-semibold text-slate-700">Stage</th>
                     <th className="px-4 py-2 text-left font-semibold text-slate-700">Pace</th>
+                    <th className="px-4 py-2 text-left font-semibold text-slate-700">Speed</th>
                     <th className="px-4 py-2 text-left font-semibold text-slate-700">Lactate</th>
                     <th className="px-4 py-2 text-left font-semibold text-slate-700">HR</th>
                     <th className="px-4 py-2 text-left font-semibold text-slate-700">RPE</th>
+                    <th className="px-4 py-2 text-left font-semibold text-slate-700">Metrics</th>
                     <th className="px-4 py-2 text-left font-semibold text-slate-700">Notes</th>
                   </tr>
                 </thead>
@@ -404,9 +478,17 @@ export function TestRunner({ testId, protocol, initialPoints }: Props) {
                     <tr key={p.stage_index} className="hover:bg-slate-50">
                       <td className="px-4 py-2 font-semibold text-slate-800">{p.stage_index}</td>
                       <td className="px-4 py-2 text-slate-700">{formatPace(p.pace_seconds_per_km)}</td>
+                      <td className="px-4 py-2 text-slate-700">{p.speed_kmh ?? "-"}</td>
                       <td className="px-4 py-2 text-slate-700">{p.lactate_mmol} mmol/L</td>
                       <td className="px-4 py-2 text-slate-700">{p.hr_bpm ?? "-"}</td>
                       <td className="px-4 py-2 text-slate-700">{p.rpe ?? "-"}</td>
+                      <td className="px-4 py-2 text-slate-700">
+                        {Object.keys(p.metrics ?? {}).length
+                          ? Object.entries(p.metrics ?? {})
+                              .map(([k, v]) => `${k}: ${v}`)
+                              .join(", ")
+                          : "-"}
+                      </td>
                       <td className="px-4 py-2 text-slate-700">{p.comments ?? "-"}</td>
                     </tr>
                   ))}
