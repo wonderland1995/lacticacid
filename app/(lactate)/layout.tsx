@@ -1,13 +1,12 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
-import { logoutAction } from "@/app/actions/logout";
-
-const authDisabled =
-  process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
+import { SignOutButton } from "@/components/auth/SignOutButton";
+import { getServerClient } from "@/lib/supabase-server";
 
 export default async function LactateLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const guestName = cookieStore.get("guest_user_name")?.value;
+  const supabase = await getServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
     <div className="min-h-screen">
@@ -36,18 +35,19 @@ export default async function LactateLayout({ children }: { children: React.Reac
             >
               New test
             </Link>
-            {authDisabled && (
-              <form action={logoutAction} className="flex items-center gap-2">
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  {guestName ? `Guest: ${guestName}` : "Guest mode"}
-                </span>
-                <button
-                  type="submit"
-                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-200"
-                >
-                  Log out
-                </button>
-              </form>
+            {user ? (
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-sm text-slate-700 shadow-sm">
+                <span className="hidden sm:inline">{user.email}</span>
+                <span className="text-xs text-slate-400">|</span>
+                <SignOutButton />
+              </div>
+            ) : (
+              <Link
+                href="/lactate"
+                className="rounded-full border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-500"
+              >
+                Sign in
+              </Link>
             )}
           </nav>
         </div>

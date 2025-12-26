@@ -1,46 +1,35 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
+import { AuthForm } from "@/components/auth/AuthForm";
 import { getServerClient } from "@/lib/supabase-server";
 import { DEFAULT_PROTOCOL } from "@/lib/types";
 import { displayDate } from "@/lib/utils";
-import { GuestPrompt } from "../components/GuestPrompt";
-
-const authDisabled =
-  process.env.DISABLE_AUTH === "true" || process.env.NEXT_PUBLIC_DISABLE_AUTH === "true";
-const serviceRoleMissing = authDisabled && !process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const dynamic = "force-dynamic";
 
 export default async function LactatePage() {
-  if (serviceRoleMissing) {
+  const supabase = await getServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
     return (
-      <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
-        Guest mode is enabled but SUPABASE_SERVICE_ROLE_KEY is not set. Add it to the server env (Supabase → Settings → API
-        → service_role) and redeploy.
+      <div className="flex justify-center">
+        <AuthForm redirectTo="/lactate" />
       </div>
     );
   }
 
-  const supabase = await getServerClient();
-  const cookieStore = await cookies();
-  const guestId = cookieStore.get("guest_user_id")?.value;
-  const userId = authDisabled ? guestId : (await supabase.auth.getUser()).data.user?.id;
+  const { data: tests, error } = await supabase
+    .from("lactate_tests")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
 
-  if (!userId) {
-    return <GuestPrompt nextLabel="sessions" redirectTo="/lactate" />;
-  }
-
-  const { data: tests, error } = authDisabled
-    ? await supabase.from("lactate_tests").select("*").order("created_at", { ascending: false }).limit(100)
-    : await supabase
-        .from("lactate_tests")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-  const { data: pointCounts } = authDisabled
-    ? await supabase.from("lactate_points").select("test_id, stage_index")
-    : await supabase.from("lactate_points").select("test_id, stage_index").eq("user_id", userId);
+  const { data: pointCounts } = await supabase
+    .from("lactate_points")
+    .select("test_id, stage_index")
+    .eq("user_id", user.id);
 
   const countMap = new Map<string, number>();
   pointCounts?.forEach((p) => {
