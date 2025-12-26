@@ -14,7 +14,7 @@ export function AuthForm({
   title = "Sign in to save your tests",
   subtitle = "Use an email magic link to authenticate. No passwords, just a quick link.",
 }: Props) {
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://lacticacid-production.up.railway.app").replace(/\/$/, "");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
