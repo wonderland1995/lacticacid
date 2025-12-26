@@ -23,13 +23,9 @@ export default async function LactatePage() {
   const { data: tests, error } = await supabase
     .from("lactate_tests")
     .select("*")
-    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  const { data: pointCounts } = await supabase
-    .from("lactate_points")
-    .select("test_id, stage_index")
-    .eq("user_id", user.id);
+  const { data: pointCounts } = await supabase.from("lactate_points").select("test_id, stage_index");
 
   const countMap = new Map<string, number>();
   pointCounts?.forEach((p) => {

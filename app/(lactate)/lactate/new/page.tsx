@@ -11,7 +11,7 @@ async function createAndRedirect() {
   "use server";
   const result = await createTestAction();
   if (result?.data?.id) {
-    redirect(`/lactate/new?testId=${result.data.id}`);
+    redirect(`/lactate/${result.data.id}`);
   }
   redirect("/lactate");
 }
@@ -54,12 +54,7 @@ export default async function NewTestPage({ searchParams }: { searchParams: Reco
     );
   }
 
-  const { data: test, error: testError } = await supabase
-    .from("lactate_tests")
-    .select("*")
-    .eq("id", testId)
-    .eq("user_id", user.id)
-    .single();
+  const { data: test, error: testError } = await supabase.from("lactate_tests").select("*").eq("id", testId).single();
 
   if (testError || !test) {
     return (

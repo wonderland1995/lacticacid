@@ -7,8 +7,41 @@ import { displayDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export default async function SessionPage({ params }: { params: { id: string } }) {
-  if (!params?.id || params.id === "undefined") {
+type SearchParams = Record<string, string | string[] | undefined>;
+
+function firstQueryValue(sp?: SearchParams, keys: string[] = ["id", "testId"]) {
+  if (!sp) return undefined;
+  for (const key of keys) {
+    const v = sp[key];
+    if (typeof v === "string" && v.trim()) return v;
+    if (Array.isArray(v) && v[0]?.trim()) return v[0];
+  }
+  return undefined;
+}
+
+export default async function SessionPage({
+  params,
+  searchParams,
+}: {
+  params: { id?: string };
+  searchParams?: SearchParams;
+}) {
+  const testId = params?.id || firstQueryValue(searchParams);
+
+  const supabase = await getServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <div className="flex justify-center">
+        <AuthForm redirectTo={`/lactate/${testId ?? ""}`} title="Sign in to view this session" />
+      </div>
+    );
+  }
+
+  if (!testId) {
     return (
       <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
         Missing session id. Go back to{" "}
@@ -20,30 +53,12 @@ export default async function SessionPage({ params }: { params: { id: string } }
     );
   }
 
-  const supabase = await getServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return (
-      <div className="flex justify-center">
-        <AuthForm redirectTo={`/lactate/${params.id}`} title="Sign in to view this session" />
-      </div>
-    );
-  }
-
-  const { data: test, error } = await supabase
-    .from("lactate_tests")
-    .select("*")
-    .eq("id", params.id)
-    .eq("user_id", user.id)
-    .single();
+  const { data: test, error } = await supabase.from("lactate_tests").select("*").eq("id", testId).single();
 
   if (error || !test) {
     return (
       <div className="rounded-2xl bg-white/80 p-6 text-sm text-rose-700 shadow-sm ring-1 ring-rose-200">
-        Failed to load session. {error?.message ?? "Not found."}
+        Failed to load session {testId}. {error?.message ?? "Not found."}
       </div>
     );
   }
@@ -51,8 +66,7 @@ export default async function SessionPage({ params }: { params: { id: string } }
   const { data: points, error: pointsError } = await supabase
     .from("lactate_points")
     .select("*")
-    .eq("test_id", params.id)
-    .eq("user_id", user.id)
+    .eq("test_id", testId)
     .order("stage_index", { ascending: true });
 
   if (pointsError) {
@@ -84,7 +98,7 @@ export default async function SessionPage({ params }: { params: { id: string } }
       </div>
 
       <SessionDetail
-        testId={params.id}
+        testId={testId}
         protocol={protocol}
         initialPoints={(points ?? []) as LactatePoint[]}
         initialNotes={test.notes}
